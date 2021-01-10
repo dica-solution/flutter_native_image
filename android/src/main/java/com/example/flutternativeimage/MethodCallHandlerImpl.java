@@ -3,6 +3,7 @@ package com.example.flutternativeimage;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.util.Log;
 
@@ -34,6 +35,7 @@ public class MethodCallHandlerImpl implements MethodChannel.MethodCallHandler {
             int targetWidth = call.argument("targetWidth") == null ? 0 : (int) call.argument("targetWidth");
             int targetHeight = call.argument("targetHeight") == null ? 0 : (int) call.argument("targetHeight");
             int quality = call.argument("quality");
+            boolean rotate = call.argument("rotate") == null ? true : (boolean) call.argument("rotate");
 
             File file = new File(fileName);
 
@@ -42,7 +44,7 @@ public class MethodCallHandlerImpl implements MethodChannel.MethodCallHandler {
                 return;
             }
 
-            Bitmap bmp = BitmapFactory.decodeFile(fileName);
+            Bitmap bmp = rotate ? rotatedBitmap(fileName) : BitmapFactory.decodeFile(fileName);
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
             int newWidth = targetWidth == 0 ? (bmp.getWidth() / 100 * resizePercentage) : targetWidth;
@@ -113,6 +115,7 @@ public class MethodCallHandlerImpl implements MethodChannel.MethodCallHandler {
             int originY = call.argument("originY");
             int width = call.argument("width");
             int height = call.argument("height");
+            boolean rotate = call.argument("rotate") == null ? true : (boolean) call.argument("rotate");
 
             File file = new File(fileName);
 
@@ -121,7 +124,7 @@ public class MethodCallHandlerImpl implements MethodChannel.MethodCallHandler {
                 return;
             }
 
-            Bitmap bmp = BitmapFactory.decodeFile(fileName);
+            Bitmap bmp = rotate ? rotatedBitmap(fileName) : BitmapFactory.decodeFile(fileName);
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
             try {
@@ -231,5 +234,46 @@ public class MethodCallHandlerImpl implements MethodChannel.MethodCallHandler {
         } else {
             return fileName;
         }
+    }
+
+    private Bitmap rotatedBitmap(String filePath) {
+        // get exif orientation
+        int rotationAngle = 0;
+        try {
+            ExifInterface exif = new ExifInterface(filePath);
+            int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+            switch (orientation) {
+                case ExifInterface.ORIENTATION_ROTATE_270:
+                    rotationAngle = 270;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_180:
+                    rotationAngle = 180;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_90:
+                    rotationAngle = 90;
+                    break;
+            }
+        } catch (Exception ex) {
+            Log.e("FlutterNativeImagePlug", "Error preserving Exif data on selected image: " + ex);
+        }
+
+        // get rotated bitmap
+        Bitmap originalBitmap = BitmapFactory.decodeFile(filePath);
+        if (rotationAngle == 0) {
+            return originalBitmap;
+        }
+
+        Matrix matrix = new Matrix();
+        matrix.postRotate(rotationAngle);
+        Bitmap rotatedBitmap = Bitmap.createBitmap(
+                originalBitmap,
+                0,
+                0,
+                originalBitmap.getWidth(),
+                originalBitmap.getHeight(),
+                matrix,
+                true
+        );
+        return rotatedBitmap;
     }
 }
