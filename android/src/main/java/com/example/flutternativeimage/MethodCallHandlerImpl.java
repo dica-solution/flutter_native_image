@@ -111,10 +111,10 @@ public class MethodCallHandlerImpl implements MethodChannel.MethodCallHandler {
         }
         if(call.method.equals("cropImage")) {
             String fileName = call.argument("file");
-            int originX = call.argument("originX");
-            int originY = call.argument("originY");
-            int width = call.argument("width");
-            int height = call.argument("height");
+            double originX = call.argument("originX");
+            double originY = call.argument("originY");
+            double width = call.argument("width");
+            double height = call.argument("height");
             boolean rotate = call.argument("rotate") == null ? true : (boolean) call.argument("rotate");
 
             File file = new File(fileName);
@@ -128,7 +128,12 @@ public class MethodCallHandlerImpl implements MethodChannel.MethodCallHandler {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
             try {
-                bmp = Bitmap.createBitmap(bmp, originX, originY, width, height);
+                bmp = Bitmap.createBitmap(
+                        bmp,
+                        (int)( bmp.getWidth() * originX),
+                        (int)(bmp.getHeight()* originY),
+                        (int)( bmp.getWidth() * width),
+                        (int)(bmp.getHeight()* height));
             } catch(IllegalArgumentException e) {
                 e.printStackTrace();
                 result.error("bounds are outside of the dimensions of the source image", fileName, null);
@@ -148,7 +153,7 @@ public class MethodCallHandlerImpl implements MethodChannel.MethodCallHandler {
                 outputStream = new FileOutputStream(outputFileName);
                 bos.writeTo(outputStream);
 
-                copyExif(fileName, outputFileName);
+                // copyExif(fileName, outputFileName);
 
                 result.success(outputFileName);
             } catch (FileNotFoundException e) {

@@ -71,8 +71,8 @@ class FlutterNativeImage {
   /// Crops the given [fileName].
   /// [originX] and [originY] control from where the image should be cropped.
   /// [width] and [height] control how the image is being cropped.
-  static Future<File> cropImage(
-      String fileName, int originX, int originY, int width, int height) async {
+  static Future<File> cropImage(String fileName, double originX, double originY,
+      double width, double height) async {
     var file = await _channel.invokeMethod("cropImage", {
       'file': fileName,
       'originX': originX,
