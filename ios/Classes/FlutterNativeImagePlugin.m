@@ -101,10 +101,10 @@
 
     	NSString *fileArgument = [_arguments objectForKey:@"file"];
     	NSURL *uncompressedFileUrl = [NSURL URLWithString:fileArgument];
-    	int originX = [[_arguments objectForKey:@"originX"] intValue];
-    	int originY = [[_arguments objectForKey:@"originY"] intValue];
-    	int width = [[_arguments objectForKey:@"width"] intValue];
-    	int height = [[_arguments objectForKey:@"height"] intValue];
+    	NSNumber* originX = (NSNumber*) [_arguments objectForKey:@"originX"];
+    	NSNumber* originY = (NSNumber*)[_arguments objectForKey:@"originY"];
+    	NSNumber* width = (NSNumber*)[_arguments objectForKey:@"width"];
+    	NSNumber* height = (NSNumber*)[_arguments objectForKey:@"height"];
 
         NSString *fileName = [[fileArgument lastPathComponent] stringByDeletingPathExtension];   
         NSString *uuid = [[NSUUID UUID] UUIDString];
@@ -117,15 +117,15 @@
         UIImage *img = [[UIImage alloc] initWithData:data];
         img = [self normalizedImage:img];
 
-        if(originX<0 || originY<0 
-        	|| originX>img.size.width || originY>img.size.height 
-        	|| originX+width>img.size.width || originY+height>img.size.height) {
-        	result([FlutterError errorWithCode:@"bounds_error"
-                                        message:@"Bounds are outside of the dimensions of the source image"
-                                        details:nil]);
-        }
+        // if(originX<0 || originY<0 
+        // 	|| originX>img.size.width || originY>img.size.height 
+        // 	|| originX+width>img.size.width || originY+height>img.size.height) {
+        // 	result([FlutterError errorWithCode:@"bounds_error"
+        //                                 message:@"Bounds are outside of the dimensions of the source image"
+        //                                 details:nil]);
+        // }
 
-		CGRect cropRect = CGRectMake(originX, originY, width, height);
+		CGRect cropRect = CGRectMake(originX.doubleValue * img.size.width, originY.doubleValue * img.size.height, width.doubleValue * img.size.width, height.doubleValue * img.size.height);
 		CGImageRef imageRef = CGImageCreateWithImageInRect([img CGImage], cropRect);
 		UIImage *croppedImg = [UIImage imageWithCGImage:imageRef];
 		CGImageRelease(imageRef);
